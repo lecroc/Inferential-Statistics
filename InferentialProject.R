@@ -81,6 +81,14 @@ summary(aov)
 
 # AOV shows differences between groups move on to pair-wise tests
 
+# Bonferroni correction
+
+k<-nlevels(mydata$region)
+
+bc<-k*(k-1)/2
+
+bcsig<-.05/bc
+
 
 
 
