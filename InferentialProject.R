@@ -6,6 +6,7 @@ library(dplyr)
 library(ggplot2)
 library(olsrr)
 library(tidyr)
+library(gplots)
 
 # load data
 
@@ -198,6 +199,10 @@ ols_test_score(model, rhs = T)
 aov<-aov(coninc~region, mydata)
 
 summary(aov)
+
+drop1(aov,~.,test="F")
+
+TukeyHSD(aov)
 
 # AOV shows differences between groups move on to pair-wise tests
 
@@ -474,5 +479,3 @@ ttable$upperci<-as.numeric(as.character(ttable$upperci))
 ttable$CIsig<-ifelse(((ttable$lowerci<0 & ttable$upperci<0) | (ttable$lowerci>0 & ttable$upperci>0)), "Yes", "No")
 ttable$Bsig<-ifelse(pval<bcsig, "Yes","No")
 
-
-           
