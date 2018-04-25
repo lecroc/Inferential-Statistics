@@ -72,7 +72,7 @@ p1<-ggplot(mydata, aes(x=factor(region), y=coninc, fill=factor(region)))+
   xlab("Region")+ylab("Constant Annual Income")
 p1
 
-# Look at normality of Constant Income distributions by Region after log transform
+# Look at normality of Constant Income distributions by Region 
 
 NE<-mydata %>% filter(region=="New England")
 MA<-mydata %>% filter(region=="Middle Atlantic")
@@ -83,6 +83,8 @@ ESC<-mydata %>% filter(region=="E. Sou. Central")
 WSC<-mydata %>% filter(region=="W. Sou. Central")
 MT<-mydata %>% filter(region=="Mountain")
 PC<-mydata %>% filter(region=="Pacific")
+
+png(file='plot1.png')
 
 par(mfrow=c(3,3))
 
@@ -112,6 +114,8 @@ qqline(MT$coninc)
 
 qqnorm(PC$coninc, main = "Pacific")
 qqline(PC$coninc)
+
+dev.off()
 
 par(mfrow=c(1,1))
 
@@ -156,6 +160,8 @@ WSC<-mydata %>% filter(region=="W. Sou. Central")
 MT<-mydata %>% filter(region=="Mountain")
 PC<-mydata %>% filter(region=="Pacific")
 
+png(file='plot2.png')
+
 par(mfrow=c(3,3))
 
 qqnorm(NE$coninc, main = "New England")
@@ -185,6 +191,8 @@ qqline(MT$coninc)
 qqnorm(PC$coninc, main = "Pacific")
 qqline(PC$coninc)
 
+dev.off()
+
 par(mfrow=c(1,1))
 
 # Test for heteroscedasticity
@@ -204,7 +212,7 @@ drop1(aov,~.,test="F")
 
 TukeyHSD(aov)
 
-# AOV shows differences between groups move on to pair-wise tests
+# AOV shows differences between groups move on to pair wise t-tests
 
 # Bonferroni correction
 

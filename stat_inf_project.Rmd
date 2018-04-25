@@ -56,9 +56,94 @@ Does the constant annual income (dollars adjusted for inflation) of respondents 
 
 ## Part 3: Exploratory data analysis
 
-NOTE: Insert code chunks as needed by clicking on the "Insert a new code chunk" 
-button (green button with orange arrow) above. Make sure that your code is visible
-in the project you submit. Delete this note when before you submit your work.
+To get the dataset I need to answer my research question I will reduce the data to the constant incomes reported by self-identified black respondents in all nine regions.  I'll then remove any records with missing data and look at the counts by region to make sure I have enough data from each region.
+
+```{r}
+
+# creat my data
+
+mydata<-gss %>%
+  select(race, coninc, region) %>%
+  filter(race != "Other" & race !="White") %>%
+  select(region, coninc)
+
+# get rid of N/As
+
+completes<-complete.cases(mydata)
+mydata<-mydata[completes,]
+
+#  Check counts of respondents by region
+
+mydatasum<-mydata %>%
+  group_by(region) %>%
+  summarise(n=n())
+
+head(mydatasum, 9)
+
+```
+
+I'll now organize a table of summary statistics:
+
+```{r}
+
+sum1<- mydata %>%
+  group_by(region) %>%
+  summarise(Q1=quantile(coninc, .25), Mean=mean(coninc), Median=median(coninc),
+            Q3=quantile(coninc, .75), IQR=IQR(coninc), StDev=sd(coninc)) %>%
+  mutate(Skew=ifelse(Mean>Median, "Right", "Left"))
+
+head(sum1, 9)
+```
+
+The summary statistics show that the constant income data is right skewed for all regions.  In addition, there is a fair amount of variability in the center and spread of the distributions.  The box plot below helps illustrate these characteristics:
+
+
+```{r}
+p1<-ggplot(mydata, aes(x=factor(region), y=coninc, fill=factor(region)))+
+  geom_boxplot()+ggtitle("Constant Income by Region")+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 60,hjust = 1))+
+  xlab("Region")+ylab("Constant Annual Income")
+p1
+```
+
+Near-normality for the constant income distributions by region is a concern as it is a condition for an ANOVA analysis.  I will look at further examine this with the following qq plots:
+
+![](plot1.png)
+
+We can see that from these plots that the distributions are not normal.  To address this I will log transform the constant income data and then re-look at the summary statistics and normality using the log-transformed variable.
+
+```{r}
+# log transform
+
+mydata$coninc<-log(mydata$coninc)
+
+# EDA after log transform
+
+sum2<- mydata %>%
+  group_by(region) %>%
+  summarise(Q1=quantile(coninc, .25), Mean=mean(coninc), Median=median(coninc),
+            Q3=quantile(coninc, .75), IQR=IQR(coninc), StDev=sd(coninc)) %>%
+  mutate(Skew=ifelse(Mean>Median, "Right", "Left"))
+
+head(sum2, 9)
+```
+
+The log transformation has flipped the skew from right to left in all but on region, and has tightened up the center and spread as well - as we can see from the box plot below:
+
+```{r}
+
+p2<-ggplot(mydata, aes(x=factor(region), y=coninc, fill=factor(region)))+
+  geom_boxplot()+ggtitle("Natural Log of Constant Income by Region")+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 60,hjust = 1))+
+  xlab("Region")+ylab("Log of Constant Annual Income")
+
+p2
+
+```
+
+In addition, the log transformed distribution is much more normal as evidenced by these plots:
+
+![](plot2.png)
 
 * * *
 
