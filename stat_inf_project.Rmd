@@ -17,6 +17,7 @@ library(ggplot2)
 library(olsrr)
 library(tidyr)
 library(gplots)
+library(knitr)
 ```
 
 ### Load data
@@ -78,7 +79,7 @@ mydatasum<-mydata %>%
   group_by(region) %>%
   summarise(n=n())
 
-head(mydatasum, 9)
+kable(mydatasum)
 
 ```
 
@@ -92,7 +93,7 @@ sum1<- mydata %>%
             Q3=quantile(coninc, .75), IQR=IQR(coninc), StDev=sd(coninc)) %>%
   mutate(Skew=ifelse(Mean>Median, "Right", "Left"))
 
-head(sum1, 9)
+kable(sum1)
 ```
 
 The summary statistics show that the constant income data is right skewed for all regions.  In addition, there is a fair amount of variability in the center and spread of the distributions.  The box plot below helps illustrate these characteristics:
@@ -125,7 +126,7 @@ sum2<- mydata %>%
             Q3=quantile(coninc, .75), IQR=IQR(coninc), StDev=sd(coninc)) %>%
   mutate(Skew=ifelse(Mean>Median, "Right", "Left"))
 
-head(sum2, 9)
+kable(sum2)
 ```
 
 The log transformation has flipped the skew from right to left in all but on region, and has tightened up the center and spread as well - as we can see from the box plot below:
@@ -152,16 +153,18 @@ In addition, the log transformed distribution is much more normal as evidenced b
 I will first perform an ANOVA on the groups.  The hypotheses are:
 
 H0 = the mean of constant income is the same for all regions
+
 HA = at least one pair of regions have constant income means that are different from each other
 
-### AOVA Conditions
+
+### ANOVA Conditions
 
 Independence within groups
 Independence between groups
 Near normal distributions 
 Similar variance between groups
 
-ANOVA analysis in r:
+### ANOVA analysis in r:
 
 ```{r}
 
@@ -173,9 +176,12 @@ summary(aov)
 
 ```
 
-High F value and very low p value indicate that we should reject the null hypothesis.
+#### High F value and very low p value indicate that we should reject the null hypothesis.
 
-I want to discover which regions are different so I will run a t-tests on all possible combinations of regions, using the bonferoni correction to control for type 1 errors.
+
+## Region by Region t-tests
+
+I want to discover which regions have significant differences so I will run a t-test on all possible combinations of regions, using the bonferoni correction to control for type 1 errors.
 
 ```{r}
 
@@ -393,15 +399,25 @@ pval<-c(t1p, t2p, t3p, t4p, t5p, t6p, t7p, t8p,
 
 # Region Combination
 
-combo<-c("NE V MA", "NE V ENC", "NE V WNC", "NE V SA",
-          "NE V ESC", "NE V WSC", "NE V MT", 'NE V PC',
-          "MA V ENC", "MA V WNC", "MA V SA", "MA V ESC",
-          "MA V WSC", "MA V MT", "MA V PC", "ENC V WNC",
-          "ENC V SA", "ENC V ESC", "ENC V WSC", "ENC V MT",
-          "ENC V PC", "WNC V SA", "WNC V ESC", "WNC V WSC",
-          "WNC V MT", "WNC V PC", "SA V ESC", "SA V WSC",
-          "SA V MT", "SA V PC", "ESC V WSC", "ESC V MT",
-          "ESC V PC", "WSC V MT", "WSC V PC", "MT V PC")
+combo<-c("New England V Middle Atlantic", "New England V East North Central",
+         "New Enegland V West North Central", "New England V South Atlantic",
+         "New England V East South Central", "New England V West South Central",
+         "New England V Mountain", 'New England V Pacific',
+         "Middle Atlantic V East North Central", "Middle Atlantic V West North Central",
+         "Middle Atlantic V South Atlantic", "Middle Atlantic V East South Central",
+         "Middle Atlantic V West South Central", "Middle Atlantic V Mountaih",
+         "Middle Atlantic V Pacific", "East North Central V West North Central",
+         "East North Central V South Atlantic", "East North Central V East South Central",
+         "East North Central V West South Central", "East North Central V Mountain",
+         "East North Central V Pacific", "West North Central V South Atlantic",
+         "West North Central V East South Central", 
+         "West North Central V West South Central",
+         "West North Central V Mountain", "West North Central V Pacific",
+         "South Atlantic V East South Central", "South Atlantic V West South Central",
+         "South Atlantic V Mountain", "South Atlantic V Pacific",
+         "East South Central V West South Central", "East South Central V Mountain",
+         "East Sourth Central V Pacific", "West South Central V Mountain",
+         "West South Central V Pacific", "Mountain V Pacific")
 
 # Lower confidence interval
 
@@ -461,11 +477,16 @@ ttable$upperci<-as.numeric(as.character(ttable$upperci))
 
 ttable$CIsig<-ifelse(((ttable$lowerci<0 & ttable$upperci<0) | (ttable$lowerci>0 & ttable$upperci>0)), "Yes", "No")
 ttable$Bsig<-ifelse(pval<bcsig, "Yes","No")
+```
 
-head(ttable, 36)
+### Results of Region by Region t-tests
 
+```{r}
 
+kable(ttable)
 
 ```
 
- 
+
+
+
