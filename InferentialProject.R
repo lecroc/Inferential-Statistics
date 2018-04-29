@@ -231,3 +231,7 @@ ttable<-pairwise.t.test(mydata$coninc, mydata$region, p.adj="bonf")
 
 ttable
 
+ttable1<-pairwise.t.test(mydata$coninc, mydata$region, p.adj="none")
+
+ttable1
+

@@ -1,10 +1,11 @@
 ---
 title: "Statistical inference with the GSS data"
-output: 
-  html_document: 
+output:
+  html_document:
     fig_height: 4
     highlight: pygments
     theme: spacelab
+  word_document: default
 ---
 
 ## Setup
@@ -48,7 +49,7 @@ This study is observational without random assignment, and therefore no causal r
 
 ## Part 2: Research question
 
-I'm interested in racial diversity issues particularly related to income inequality.  I'm curious to see if certain regions of the United States might correlate with higher incomes for people of color.  Therefore, my research question is:
+I'm interested in racial diversity issues particularly related to income inequality.  I'm curious to see if household incomes for black families vary by region.  Therefore, my research question is:
 
 Does the constant annual family income (dollars adjusted for inflation) of respondents who self-idenfify as black differ significantly by region?
 
@@ -101,19 +102,21 @@ sum1<- mydata %>%
   mutate(Skew=ifelse(Mean>Median, "Right", "Left"))
 
 kable(sum1)
+
 ```
 
 
 The summary statistics show that the constant income data is right skewed for all regions.  In addition, there is a fair amount of variability in the center and spread of the distributions.  The box plot below helps illustrate these characteristics:
 
 
-
 ```{r}
+
 p1<-ggplot(mydata, aes(x=factor(region), y=coninc, fill=factor(region)))+
   geom_boxplot()+ggtitle("Constant Income by Region")+
   theme(legend.position = "none", axis.text.x = element_text(angle = 60,hjust = 1))+
   xlab("Region")+ylab("Constant Annual Income")
 p1
+
 ```
 
 
@@ -169,14 +172,10 @@ In addition, the log transformed distribution is much more normal as evidenced b
 
 ## Part 4: Inference
 
-I will first perform an ANOVA on the regions.  The hypotheses are:
-
-H0 = the mean of constant income is the same for all regions
-
-HA = at least one pair of regions have constant income means that are different from each other
-
 
 ### ANOVA Conditions
+
+I will first perform an ANOVA on the regions.  The conditions for ANOVA are as follows:
 
 
 #### Independence within groups
@@ -214,6 +213,13 @@ Since we have met the conditions for ANOVA, I'll now move on to the analysis its
 
 ### ANOVA analysis in r:
 
+The hypotheses are:
+
+H0 = the mean of constant income is the same for all regions
+
+HA = at least one pair of regions have constant income means that are different from each other
+
+
 ```{r}
 
 # ANOVA on log transformed data
@@ -225,12 +231,14 @@ summary(aov)
 ```
 
 
-The high F value and very low p value indicate that we should reject the null hypothesis that there is no difference average contstant income between the regions.  The data suggest that there is a significant difference in the constant income between at least two of the reagions.
+## Interpretation of ANOVA
+
+The high F value and very low p value indicate that we should reject the null hypothesis that there is no difference in mean contstant income between the regions.  With the ANOVA test, no confidence interval is generated, so inference is derived from the p-value.  We can say that the data suggest that there is a significant difference in the mean constant income between at least two of the regions.
 
 
 ## Region by Region t-tests
 
-I want to discover which regions have significant differences in constant income, so I will run a t-test on all possible combinations of regions, using the bonferoni correction to control for type 1 errors.
+I want to discover which regions have significant differences in mean constant income, so I will run a t-test on all possible combinations of regions, using the bonferroni correction to control for type 1 errors.
 
 
 ```{r}
@@ -242,14 +250,20 @@ kable(ttable$p.value)
 ```
 
 
-### Results of Region by Region t-tests
+### Interpretation of Results of Region by Region t-tests
 
 
-A close inspection of the table shows that the East South Central and West South Central regions report lower average constant incomes for black households than the other seven regions.  The states included in these regions are Alabama, Arkansas, Kentucky, Louisiana, Mississippi, Oklahoma, Tennessee and Texas.
+The pairwise.t.test with the p.adj function returns an adjusted p-value.  The p-values are adjusted upwards based on the correction method selected, in this case, the bonferroni correction.  This means that we'll interpret the p-values normally, looking for those less than .o5 to reject the null hypothesis of no difference in means.
 
-A map and further information on the regions can be found here: https://www2.census.gov/geo/pdfs/maps-data/maps/reference/us_regdiv.pdf
+A close inspection of the table shows that we reject the null in all cases for both the the East South Central and West South Central regions.  The states included in these regions are Alabama, Arkansas, Kentucky, Louisiana, Mississippi, Oklahoma, Tennessee and Texas.  Looking at the summary tables we see that the mean constant incomes in these states are lower than the other regions.  Therefore, the data suggest that it is highly unlikely that these lower mean constant incomes are due to random chance, and that further investigation into this would be worthwhile.
 
-All of the r code for this analysis can be found here: https://github.com/lecroc/Inferential-Statistics
+A map and further information on the regions can be found here:
+
+https://www2.census.gov/geo/pdfs/maps-data/maps/reference/us_regdiv.pdf
+
+All of the r code for this analysis can be found here:
+
+https://github.com/lecroc/Inferential-Statistics
 
 
 
