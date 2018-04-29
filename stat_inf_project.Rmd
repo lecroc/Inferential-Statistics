@@ -32,7 +32,7 @@ load("gss.Rdata")
 
 ## Part 1: Data
 
-The data comes from the General Social Surveys conducted by the National Opinion Research Center using a standard questionaire.  Surveys were conducted in 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1980, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991, 1993, 1994, 1996, 1998, 2000, 2002, 2004, 2006, 2008, 2010, 2012, 2014, and 2016.  A total of 62466 interviews have been conducted, with the median length of the interview being about one and one-half hours.  
+The data comes from the General Social Surveys conducted by the National Opinion Research Center using a standard questionaire.  Surveys were conducted in 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1980, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991, 1993, 1994, 1996, 1998, 2000, 2002, 2004, 2006, 2008, 2010, 2012, 2014, and 2016.  A total of 62,466 interviews have been conducted, with the median length of the interview being about one and one-half hours.  
 
 Surveys from 1972 through 2004 were independently drawn samples of English-speaking persons 18 years of age or over, living in non-institutional arrangements within the United States. Starting in 2006 Spanish-speakers were added to the target population. 
 
@@ -50,14 +50,17 @@ This study is observational without random assignment, and therefore no causal r
 
 I'm interested in racial diversity issues particularly related to income inequality.  I'm curious to see if certain regions of the United States might correlate with higher incomes for people of color.  Therefore, my research question is:
 
-Does the constant annual income (dollars adjusted for inflation) of respondents who self-idenfify as black differ significantly by region?
+Does the constant annual family income (dollars adjusted for inflation) of respondents who self-idenfify as black differ significantly by region?
 
 
 * * *
 
 ## Part 3: Exploratory data analysis
 
+
 To get the dataset I need to answer my research question I will reduce the data to the constant incomes reported by self-identified black respondents in all nine regions.  I'll then remove any records with missing data and look at the counts by region to make sure I have enough data from each region.
+
+
 
 ```{r}
 
@@ -83,7 +86,11 @@ kable(mydatasum)
 
 ```
 
+
+The smallest sample (78) comes from the Mountain region.  It seems reasonable to assume that the number of samples in each region is less than 10% of the total population, which will be important in meeting the conditions for ANOVA.
+
 I'll now organize a table of summary statistics:
+
 
 ```{r}
 
@@ -96,7 +103,9 @@ sum1<- mydata %>%
 kable(sum1)
 ```
 
+
 The summary statistics show that the constant income data is right skewed for all regions.  In addition, there is a fair amount of variability in the center and spread of the distributions.  The box plot below helps illustrate these characteristics:
+
 
 
 ```{r}
@@ -107,13 +116,18 @@ p1<-ggplot(mydata, aes(x=factor(region), y=coninc, fill=factor(region)))+
 p1
 ```
 
+
 Near-normality for the constant income distributions by region is a concern as it is a condition for an ANOVA analysis.  I will look at further examine this with the following qq plots:
+
 
 ![](plot1.png)
 
-We can see that from these plots that the distributions are not normal.  To address this I will log transform the constant income data and then re-look at the summary statistics and normality using the log-transformed variable.
+
+These plots indicate that the constant income varaible is not normal.  To correct for this I'll log transform the constant income data and then re-look at the summary statistics and normality using the log-transformed variable.
+
 
 ```{r}
+
 # log transform
 
 mydata$coninc<-log(mydata$coninc)
@@ -127,9 +141,12 @@ sum2<- mydata %>%
   mutate(Skew=ifelse(Mean>Median, "Right", "Left"))
 
 kable(sum2)
+
 ```
 
+
 The log transformation has flipped the skew from right to left in all but on region, and has tightened up the center and spread as well - as we can see from the box plot below:
+
 
 ```{r}
 
@@ -142,7 +159,9 @@ p2
 
 ```
 
+
 In addition, the log transformed distribution is much more normal as evidenced by these plots:
+
 
 ![](plot2.png)
 
@@ -150,7 +169,7 @@ In addition, the log transformed distribution is much more normal as evidenced b
 
 ## Part 4: Inference
 
-I will first perform an ANOVA on the groups.  The hypotheses are:
+I will first perform an ANOVA on the regions.  The hypotheses are:
 
 H0 = the mean of constant income is the same for all regions
 
@@ -159,10 +178,39 @@ HA = at least one pair of regions have constant income means that are different 
 
 ### ANOVA Conditions
 
-Independence within groups
-Independence between groups
-Near normal distributions 
-Similar variance between groups
+
+#### Independence within groups
+
+Since the survey is a random sample, and the number of samples in each group is less than 10% of the total population, this condition is met.
+
+#### Independence between groups
+
+Since respondents could not live within two different regions at the same time, this condition is also met.
+
+#### Near normal distributions
+
+The raw constant income data was not normal, but the log transformed data is nearly normal.
+
+#### Similar variance between groups
+
+Again, the raw data was problematic in terms of this condition.  Once the data was log transformed, the variance between groups tightened up considerably.  To be sure, I ran the following test for heteroscedasticity:
+
+
+```{r}
+
+# Test for heteroscedasticity
+
+model<-lm(coninc~region, data=mydata)
+
+ols_test_f(model, rhs = T)
+
+```
+
+
+Since the p-value from the test is higher than the .05 threshold, we fail to reject the null hypothesis that the between group variance is homogenous.
+
+Since we have met the conditions for ANOVA, I'll now move on to the analysis itself.
+
 
 ### ANOVA analysis in r:
 
@@ -176,316 +224,32 @@ summary(aov)
 
 ```
 
-#### High F value and very low p value indicate that we should reject the null hypothesis.
+
+The high F value and very low p value indicate that we should reject the null hypothesis that there is no difference average contstant income between the regions.  The data suggest that there is a significant difference in the constant income between at least two of the reagions.
 
 
 ## Region by Region t-tests
 
-I want to discover which regions have significant differences so I will run a t-test on all possible combinations of regions, using the bonferoni correction to control for type 1 errors.
+I want to discover which regions have significant differences in constant income, so I will run a t-test on all possible combinations of regions, using the bonferoni correction to control for type 1 errors.
+
 
 ```{r}
 
-# Bonferroni correction
+ttable<-pairwise.t.test(mydata$coninc, mydata$region, p.adj="bonf")
 
-k<-nlevels(mydata$region)
+kable(ttable$p.value)
 
-bc<-k*(k-1)/2
-
-bcsig<-.05/bc
-
-bcsig # new p-value required for significance
-
-# t tests
-
-NE<-mydata %>% filter(region=="New England")
-MA<-mydata %>% filter(region=="Middle Atlantic")
-ENC<-mydata %>% filter(region=="E. Nor. Central")
-WNC<-mydata %>% filter(region=="W. Nor. Central")
-SA<-mydata %>% filter(region=="South Atlantic")
-ESC<-mydata %>% filter(region=="E. Sou. Central")
-WSC<-mydata %>% filter(region=="W. Sou. Central")
-MT<-mydata %>% filter(region=="Mountain")
-PC<-mydata %>% filter(region=="Pacific")
-
-# NE V MA
-t1<-t.test(NE$coninc, MA$coninc)
-t1p<-t1$p.value
-t1ci<-t1$conf.int
-
-# NE V ENC
-t2<-t.test(NE$coninc, ENC$coninc)
-t2p<-t2$p.value
-t2ci<-t2$conf.int
-
-# NE V WNC
-t3<-t.test(NE$coninc, WNC$coninc)
-t3p<-t3$p.value
-t3ci<-t3$conf.int
-
-# NE V SA
-t4<-t.test(NE$coninc, SA$coninc)
-t4p<-t4$p.value
-t4ci<-t4$conf.int
-
-# NE V ESC
-t5<-t.test(NE$coninc, ESC$coninc)
-t5p<-t5$p.value
-t5ci<-t5$conf.int
-
-# NE V WSC
-t6<-t.test(NE$coninc, WSC$coninc)
-t6p<-t6$p.value
-t6ci<-t6$conf.int
-
-# NE V MT
-t7<-t.test(NE$coninc, MT$coninc)
-t7p<-t7$p.value
-t7ci<-t7$conf.int
-
-# NE V PC
-t8<-t.test(NE$coninc, PC$coninc)
-t8p<-t8$p.value
-t8ci<-t8$conf.int
-
-# MA V ENC
-t9<-t.test(MA$coninc, ENC$coninc)
-t9p<-t9$p.value
-t9ci<-t9$conf.int
-
-# MA V WNC
-t10<-t.test(MA$coninc, WNC$coninc)
-t10p<-t10$p.value
-t10ci<-t10$conf.int
-
-# MA V SA
-t11<-t.test(MA$coninc, SA$coninc)
-t11p<-t11$p.value
-t11ci<-t11$conf.int
-
-# MA V ESC
-t12<-t.test(MA$coninc, ESC$coninc)
-t12p<-t12$p.value
-t12ci<-t12$conf.int
-
-# MA V WSC
-t13<-t.test(MA$coninc, WSC$coninc)
-t13p<-t13$p.value
-t13ci<-t13$conf.int
-
-# MA V MT
-t14<-t.test(MA$coninc, MT$coninc)
-t14p<-t14$p.value
-t14ci<-t14$conf.int
-
-# MA V PC
-t15<-t.test(MA$coninc, PC$coninc)
-t15p<-t15$p.value
-t15ci<-t15$conf.int
-
-# ENC V WNC
-t16<-t.test(ENC$coninc, WNC$coninc)
-t16p<-t16$p.value
-t16ci<-t16$conf.int
-
-# ENC V SA
-t17<-t.test(ENC$coninc, SA$coninc)
-t17p<-t17$p.value
-t17ci<-t17$conf.int
-
-# ENC V ESC
-t18<-t.test(ENC$coninc, ESC$coninc)
-t18p<-t18$p.value
-t18ci<-t18$conf.int
-
-# ENC V WSC
-t19<-t.test(ENC$coninc, WSC$coninc)
-t19p<-t19$p.value
-t19ci<-t19$conf.int
-
-# ENC V MT
-t20<-t.test(ENC$coninc, MT$coninc)
-t20p<-t20$p.value
-t20ci<-t20$conf.int
-
-# ENC V PC
-t21<-t.test(ENC$coninc, PC$coninc)
-t21p<-t21$p.value
-t21ci<-t21$conf.int
-
-# WNC V SA
-t22<-t.test(WNC$coninc, SA$coninc)
-t22p<-t22$p.value
-t22ci<-t22$conf.int
-
-# WNC V ESC
-t23<-t.test(WNC$coninc, ESC$coninc)
-t23p<-t23$p.value
-t23ci<-t23$conf.int
-
-# WNC V WSC
-t24<-t.test(WNC$coninc, WSC$coninc)
-t24p<-t24$p.value
-t24ci<-t24$conf.int
-
-# WNC V MT
-t25<-t.test(WNC$coninc, MT$coninc)
-t25p<-t25$p.value
-t25ci<-t25$conf.int
-
-# WNC V PC
-t26<-t.test(WNC$coninc, PC$coninc)
-t26p<-t26$p.value
-t26ci<-t26$conf.int
-
-# SA V ESC
-t27<-t.test(SA$coninc, ESC$coninc)
-t27p<-t27$p.value
-t27ci<-t27$conf.int
-
-# SA V WSC
-t28<-t.test(SA$coninc, WSC$coninc)
-t28p<-t28$p.value
-t28ci<-t28$conf.int
-
-# SA V MT
-t29<-t.test(SA$coninc, MT$coninc)
-t29p<-t29$p.value
-t29ci<-t29$conf.int
-
-# SA V PC
-t30<-t.test(SA$coninc, PC$coninc)
-t30p<-t30$p.value
-t30ci<-t30$conf.int
-
-# ESC V WSC
-t31<-t.test(ESC$coninc, WSC$coninc)
-t31p<-t31$p.value
-t31ci<-t31$conf.int
-
-# ESC V MT
-t32<-t.test(ESC$coninc, MT$coninc)
-t32p<-t32$p.value
-t32ci<-t32$conf.int
-
-# ESC V PC
-t33<-t.test(ESC$coninc, PC$coninc)
-t33p<-t33$p.value
-t33ci<-t33$conf.int
-
-# WSC V MT
-t34<-t.test(WSC$coninc, MT$coninc)
-t34p<-t34$p.value
-t34ci<-t34$conf.int
-
-# WSC V PC
-t35<-t.test(WSC$coninc, PC$coninc)
-t35p<-t35$p.value
-t35ci<-t35$conf.int
-
-# MT V PC
-t36<-t.test(MT$coninc, PC$coninc)
-t36p<-t36$p.value
-t36ci<-t36$conf.int
-
-# Build a table of results
-
-# P-values
-
-pval<-c(t1p, t2p, t3p, t4p, t5p, t6p, t7p, t8p,
-         t9p, t10p, t11p, t12p, t13p, t14p, t15p,
-         t16p, t17p, t18p, t19p, t20p, t21p, t22p,
-         t23p, t24p, t25p, t26p, t27p, t28p, t29p,
-         t30p, t31p, t32p, t33p, t34p, t35p, t36p)
-
-# Region Combination
-
-combo<-c("New England V Middle Atlantic", "New England V East North Central",
-         "New Enegland V West North Central", "New England V South Atlantic",
-         "New England V East South Central", "New England V West South Central",
-         "New England V Mountain", 'New England V Pacific',
-         "Middle Atlantic V East North Central", "Middle Atlantic V West North Central",
-         "Middle Atlantic V South Atlantic", "Middle Atlantic V East South Central",
-         "Middle Atlantic V West South Central", "Middle Atlantic V Mountaih",
-         "Middle Atlantic V Pacific", "East North Central V West North Central",
-         "East North Central V South Atlantic", "East North Central V East South Central",
-         "East North Central V West South Central", "East North Central V Mountain",
-         "East North Central V Pacific", "West North Central V South Atlantic",
-         "West North Central V East South Central", 
-         "West North Central V West South Central",
-         "West North Central V Mountain", "West North Central V Pacific",
-         "South Atlantic V East South Central", "South Atlantic V West South Central",
-         "South Atlantic V Mountain", "South Atlantic V Pacific",
-         "East South Central V West South Central", "East South Central V Mountain",
-         "East Sourth Central V Pacific", "West South Central V Mountain",
-         "West South Central V Pacific", "Mountain V Pacific")
-
-# Lower confidence interval
-
-lowerci<-c(t1ci[1],t2ci[1],t3ci[1],t4ci[1],t5ci[1],t6ci[1],
-           t7ci[1],t8ci[1],t9ci[1],t10ci[1],t11ci[1],t12ci[1],
-           t13ci[1],t14ci[1],t15ci[1],t16ci[1],t17ci[1],t18ci[1],
-           t19ci[1],t20ci[1],t21ci[1],t22ci[1],t23ci[1],t24ci[1],
-           t25ci[1],t26ci[1],t27ci[1],t28ci[1],t29ci[1],t30ci[1],
-           t31ci[1],t32ci[1],t33ci[1],t34ci[1],t35ci[1],t36ci[1])
-
-# Upper confidence interval
-
-upperci<-c(t1ci[2],t2ci[2],t3ci[2],t4ci[2],t5ci[2],t6ci[2],
-           t7ci[2],t8ci[2],t9ci[2],t10ci[2],t11ci[2],t12ci[2],
-           t13ci[2],t14ci[2],t15ci[2],t16ci[2],t17ci[2],t18ci[2],
-           t19ci[2],t20ci[2],t21ci[2],t22ci[2],t23ci[2],t24ci[2],
-           t25ci[2],t26ci[2],t27ci[2],t28ci[2],t29ci[2],t30ci[2],
-           t31ci[2],t32ci[2],t33ci[2],t34ci[2],t35ci[2],t36ci[2])
-
-# 1st region mean
-
-mean1<-c(mean(NE$coninc), mean(NE$coninc), mean(NE$coninc), mean(NE$coninc),
-         mean(NE$coninc), mean(NE$coninc), mean(NE$coninc), mean(NE$coninc),
-         mean(MA$coninc), mean(MA$coninc), mean(MA$coninc), mean(MA$coninc),
-         mean(MA$coninc), mean(MA$coninc), mean(MA$coninc), mean(ENC$coninc),
-         mean(ENC$coninc), mean(ENC$coninc), mean(ENC$coninc), mean(ENC$coninc),
-         mean(ENC$coninc), mean(WNC$coninc), mean(WNC$coninc), mean(WNC$coninc),
-         mean(WNC$coninc), mean(WNC$coninc), mean(SA$coninc), mean(SA$coninc),
-         mean(SA$coninc), mean(SA$coninc), mean(ESC$coninc), mean(ESC$coninc),
-         mean(ESC$coninc), mean(WSC$coninc), mean(WSC$coninc), mean(MT$coninc))
-
-# 2nd region mean
-
-mean2<-c(mean(MA$coninc), mean(ENC$coninc), mean(WNC$coninc), mean(SA$coninc),
-         mean(ESC$coninc), mean(WSC$coninc), mean(MT$coninc), mean(PC$coninc),
-         mean(ENC$coninc), mean(WNC$coninc), mean(SA$coninc), mean(ESC$coninc),
-         mean(WSC$coninc), mean(MT$coninc), mean(PC$coninc), mean(WNC$coninc),
-         mean(SA$coninc), mean(ESC$coninc), mean(WSC$coninc), mean(MT$coninc),
-         mean(PC$coninc), mean(SA$coninc), mean(ESC$coninc), mean(WSC$coninc),
-         mean(MT$coninc), mean(PC$coninc), mean(ESC$coninc), mean(WSC$coninc),
-         mean(MT$coninc), mean(PC$coninc), mean(WSC$coninc), mean(MT$coninc),
-         mean(PC$coninc), mean(MT$coninc), mean(PC$coninc), mean(PC$coninc))
-
-# Combine vectors into table
-
-ttable<-as.data.frame(cbind(combo, mean1, mean2, pval, lowerci, upperci))
-
-# Convert factors to continuous variables
-
-ttable$mean1<-as.numeric(as.character(ttable$mean1))
-ttable$mean2<-as.numeric(as.character(ttable$mean2))
-ttable$pval<-as.numeric(as.character(ttable$pval))
-ttable$lowerci<-as.numeric(as.character(ttable$lowerci))
-ttable$upperci<-as.numeric(as.character(ttable$upperci))
-
-# Add significance indicators for Bonferoni corrected pvalues and confidence intervals
-
-ttable$CIsig<-ifelse(((ttable$lowerci<0 & ttable$upperci<0) | (ttable$lowerci>0 & ttable$upperci>0)), "Yes", "No")
-ttable$Bsig<-ifelse(pval<bcsig, "Yes","No")
 ```
+
 
 ### Results of Region by Region t-tests
 
-```{r}
 
-kable(ttable)
+A close inspection of the table shows that the East South Central and West South Central regions report lower average constant incomes for black households than the other seven regions.  The states included in these regions are Alabama, Arkansas, Kentucky, Louisiana, Mississippi, Oklahoma, Tennessee and Texas.
 
-```
+A map and further information on the regions can be found here: https://www2.census.gov/geo/pdfs/maps-data/maps/reference/us_regdiv.pdf
+
+All of the r code for this analysis can be found here: https://github.com/lecroc/Inferential-Statistics
 
 
 
