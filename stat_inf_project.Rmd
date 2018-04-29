@@ -53,6 +53,8 @@ I'm interested in racial diversity issues particularly related to income inequal
 
 Does the constant annual family income (dollars adjusted for inflation) of respondents who self-idenfify as black differ significantly by region?
 
+To answer this question I will be comparing means from multiple groups.  The appropriate method for this situation is an ANOVA analysis to determine if there are any differences in means between groups.  I will follow the ANOVA up with pair-wise t-tests with adusted p-values to control type 1 error.  From the t-tests I hope to discover regions that seem either more or less favorable to the mean constant incomes of black households.
+
 
 * * *
 
